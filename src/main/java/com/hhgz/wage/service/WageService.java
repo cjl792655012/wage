@@ -71,13 +71,16 @@ public class WageService {
         headerRow.createCell(6).setCellValue("有效工作日系数");
         headerRow.createCell(7).setCellValue("工资");
         headerRow.createCell(8).setCellValue("高温补贴");
-        headerRow.createCell(9).setCellValue("餐补");
+        /*headerRow.createCell(9).setCellValue("餐补");
         headerRow.createCell(10).setCellValue("餐补X");
         headerRow.createCell(11).setCellValue("餐补A");
         headerRow.createCell(12).setCellValue("全勤奖");
         headerRow.createCell(13).setCellValue("总工资");
         headerRow.createCell(14).setCellValue("总工资X");
-        headerRow.createCell(15).setCellValue("总工资A");
+        headerRow.createCell(15).setCellValue("总工资A");*/
+        headerRow.createCell(9).setCellValue("餐补");
+        headerRow.createCell(10).setCellValue("全勤奖");
+        headerRow.createCell(11).setCellValue("总工资");
 
         for (int i = 0; i < wages.size(); i++) {
             Row dataRow = sheet.createRow(i + 1);
@@ -90,13 +93,16 @@ public class WageService {
             dataRow.createCell(6).setCellValue(wages.get(i).getEffWorkDay());
             dataRow.createCell(7).setCellValue(wages.get(i).getCalWage());
             dataRow.createCell(8).setCellValue(wages.get(i).getCalHighTempFee());
-            dataRow.createCell(9).setCellValue(wages.get(i).getCalLunchFee());
+            /*dataRow.createCell(9).setCellValue(wages.get(i).getCalLunchFee());
             dataRow.createCell(10).setCellValue(wages.get(i).getCalLunchFeeByX());
             dataRow.createCell(11).setCellValue(wages.get(i).getCalLunchFeeByA());
             dataRow.createCell(12).setCellValue(wages.get(i).getFullAward());
             dataRow.createCell(13).setCellValue(wages.get(i).getTotalWage());
             dataRow.createCell(14).setCellValue(wages.get(i).getTotalWageByX());
-            dataRow.createCell(15).setCellValue(wages.get(i).getTotalWageByA());
+            dataRow.createCell(15).setCellValue(wages.get(i).getTotalWageByA());*/
+            dataRow.createCell(9).setCellValue(wages.get(i).getCalLunchFeeByA());
+            dataRow.createCell(10).setCellValue(wages.get(i).getFullAward());
+            dataRow.createCell(11).setCellValue(wages.get(i).getTotalWageByA());
         }
 
         // 将工作簿写入文件或输出流
