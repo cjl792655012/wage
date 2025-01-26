@@ -142,12 +142,7 @@ public class WageService {
             //计算工资
             BigDecimal calWage = baseWage.divide(totalMonthMinutes, 10, RoundingMode.HALF_UP)
                     .multiply(new BigDecimal(effWorkCoe - att.getDay() * 10 * 60 - att.getMinute()));
-            //计算餐补1
-            BigDecimal calLunchFee = new BigDecimal(300).divide(totalMonthMinutes, 10, RoundingMode.HALF_UP)
-                    .multiply(new BigDecimal(lastDay * 10 * 60 - att.getDay() * 10 * 60 - att.getMinute()));
-            //计算餐补2
-            Integer calLunchFeeByX = lastDay * 10 - att.getLunchDec() * 10;
-            //计算餐补3
+            //计算餐补
             Integer calLunchIncDay = 0;
             if (calHour >= 4) {
                 calLunchIncDay += 1;
@@ -155,18 +150,13 @@ public class WageService {
             Integer calLunchFeeByA = lastDay * 10 - (calDay + calLunchIncDay) * 10;
             //计算高温补贴
             BigDecimal calHighTempFee = new BigDecimal(0);
-            //DateUtil.month(DateUtil.parse("202409", DatePattern.SIMPLE_MONTH_PATTERN))
             final int monthInt = DateUtil.month(date) + 1;
 
             if (monthInt == 6 || monthInt == 7 || monthInt == 8) {
                 Double calHighTempFeeDouble = (double) 100 / (double) lastDay * ((double) lastDay - (double) calDay - (double) calHour / 10);
                 calHighTempFee = new BigDecimal(calHighTempFeeDouble);
-                /*calHighTempFee = new BigDecimal(100).divide(new BigDecimal(31), 10, RoundingMode.HALF_UP)
-                        .multiply(new BigDecimal(new Double(31 - calDay - calHour / 10)));*/
-
             }
             Integer calWageInt = calWage.setScale(0, RoundingMode.HALF_UP).intValue();
-            Integer calLunchFeeInt = calLunchFee.setScale(0, RoundingMode.HALF_UP).intValue();
             Integer calHighTempFeeInt = calHighTempFee.setScale(0, RoundingMode.HALF_UP).intValue();
 
             Integer fullAward = 0;
@@ -175,8 +165,6 @@ public class WageService {
             }
 
             //总工资
-            Integer totalWage = calWageInt + calLunchFeeInt + calHighTempFeeInt + fullAward;
-            Integer totalWageByX = calWageInt + calLunchFeeByX + calHighTempFeeInt + fullAward;
             Integer totalWageByA = calWageInt + calLunchFeeByA + calHighTempFeeInt + fullAward;
 
             WageDTO dto = new WageDTO();
@@ -188,12 +176,8 @@ public class WageService {
             dto.setEffWorkDay(effWorkDay);
             dto.setCalWage(calWageInt);
             dto.setCalHighTempFee(calHighTempFeeInt);
-            dto.setCalLunchFee(calLunchFeeInt);
-            dto.setCalLunchFeeByX(calLunchFeeByX);
             dto.setCalLunchFeeByA(calLunchFeeByA);
             dto.setFullAward(fullAward);
-            dto.setTotalWage(totalWage);
-            dto.setTotalWageByX(totalWageByX);
             dto.setTotalWageByA(totalWageByA);
             wages.add(dto);
         });
