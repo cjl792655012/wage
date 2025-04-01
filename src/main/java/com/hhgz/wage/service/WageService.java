@@ -216,23 +216,53 @@ public class WageService {
                     Integer lunchDec = thePersonTime.getLunchDec();
 
                     int lateMinutes = 0;
-                    if (laterCell != null && laterCell.getCellType() == CellType.NUMERIC) {
-                        lateMinutes = (int) laterCell.getNumericCellValue();
-                        minute += (lateMinutes + 5);
+                    if (laterCell != null) {
+                        if (laterCell.getCellType() == CellType.NUMERIC) {
+                            lateMinutes = (int) laterCell.getNumericCellValue();
+                            minute += (lateMinutes + 5);
+                        } else if (laterCell.getCellType() == CellType.STRING) {
+                            String lateMinutesStr = laterCell.getStringCellValue();
+                            String lateMinutesStrValue = lateMinutesStr.replaceAll("[^0-9]", "");
+                            if (!"".equals(lateMinutesStrValue)) {
+                                lateMinutes = Integer.valueOf(lateMinutesStrValue);
+                                minute += (lateMinutes + 5);
+                            }
+                        }
                     }
                     int earlyLeaveMinutes = 0;
-                    if (earlyLeaveCell != null && earlyLeaveCell.getCellType() == CellType.NUMERIC) {
-                        earlyLeaveMinutes = (int) earlyLeaveCell.getNumericCellValue();
-                        minute += (earlyLeaveMinutes + 5);
+                    if (earlyLeaveCell != null) {
+                        if (earlyLeaveCell.getCellType() == CellType.NUMERIC) {
+                            earlyLeaveMinutes = (int) earlyLeaveCell.getNumericCellValue();
+                            minute += (earlyLeaveMinutes + 5);
+                        } else if (earlyLeaveCell.getCellType() == CellType.STRING) {
+                            String earlyLeaveMinutesStr = earlyLeaveCell.getStringCellValue();
+                            String earlyLeaveMinutesStrValue = earlyLeaveMinutesStr.replaceAll("[^0-9]", "");
+                            if (!"".equals(earlyLeaveMinutesStrValue)) {
+                                earlyLeaveMinutes = Integer.valueOf(earlyLeaveMinutesStrValue);
+                                minute += (earlyLeaveMinutes + 5);
+                            }
+                        }
                     }
                     if ((earlyLeaveMinutes + lateMinutes) > 210) {
                         lunchDec += 1;
                     }
-                    if (absenteeism != null && absenteeism.getCellType() == CellType.NUMERIC) {
-                        int absenteeismTimes = (int) absenteeism.getNumericCellValue();
-                        if (absenteeismTimes == 1) {
-                            lunchDec += 1;
-                            day += 1;
+                    if (absenteeism != null) {
+                        if (absenteeism.getCellType() == CellType.NUMERIC) {
+                            int absenteeismTimes = (int) absenteeism.getNumericCellValue();
+                            if (absenteeismTimes == 1) {
+                                lunchDec += 1;
+                                day += 1;
+                            }
+                        } else if (absenteeism.getCellType() == CellType.STRING) {
+                            String absenteeismTimesStr = absenteeism.getStringCellValue();
+                            String absenteeismTimesStrValue = absenteeismTimesStr.replaceAll("[^0-9]", "");
+                            if (!"".equals(absenteeismTimesStrValue)) {
+                                int absenteeismTimes = Integer.valueOf(absenteeismTimesStrValue);
+                                if (absenteeismTimes == 1) {
+                                    lunchDec += 1;
+                                    day += 1;
+                                }
+                            }
                         }
                     }
                     thePersonTime.setDay(day);
