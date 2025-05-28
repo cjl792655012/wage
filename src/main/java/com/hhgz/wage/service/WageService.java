@@ -59,50 +59,71 @@ public class WageService {
         Workbook workbook = new XSSFWorkbook(); // 使用XSSFWorkbook创建一个.xlsx格式的工作簿
         String month = DateUtil.format(date, DatePattern.NORM_MONTH_PATTERN);
         Sheet sheet = workbook.createSheet(month);
+        //设置为204%缩放
+        sheet.setZoom(190);
+        //设置列宽度为12个字符
+        sheet.setColumnWidth(5, 10 * 256);
+        sheet.setColumnWidth(6, 10 * 256);
+        sheet.setColumnWidth(7, 15 * 256);
+        // 创建居右样式
+        CellStyle rightAlignStyle = workbook.createCellStyle();
+        rightAlignStyle.setAlignment(HorizontalAlignment.RIGHT);
+        rightAlignStyle.setBorderTop(BorderStyle.THIN);         // 上边框
+        rightAlignStyle.setBorderBottom(BorderStyle.THIN);      // 下边框
+        rightAlignStyle.setBorderLeft(BorderStyle.THIN);        // 左边框
+        rightAlignStyle.setBorderRight(BorderStyle.THIN);       // 右边框
+        // 创建样式并设置背景色
+        CellStyle colorStyle = workbook.createCellStyle();
+        colorStyle.setFillForegroundColor(IndexedColors.LIGHT_YELLOW.getIndex()); // 设置前景色（填充色）
+        colorStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND); // 设置填充模式
+        colorStyle.setBorderTop(BorderStyle.THIN);         // 上边框
+        colorStyle.setBorderBottom(BorderStyle.THIN);      // 下边框
+        colorStyle.setBorderLeft(BorderStyle.THIN);        // 左边框
+        colorStyle.setBorderRight(BorderStyle.THIN);       // 右边框
+        // 创建带全边框的样式
+        CellStyle borderStyle = workbook.createCellStyle();
+        // 设置边框样式和颜色
+        borderStyle.setBorderTop(BorderStyle.THIN);         // 上边框
+        borderStyle.setBorderBottom(BorderStyle.THIN);      // 下边框
+        borderStyle.setBorderLeft(BorderStyle.THIN);        // 左边框
+        borderStyle.setBorderRight(BorderStyle.THIN);       // 右边框
 
         // 创建一行并在其上写入一些数据
         Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("日期");
         headerRow.createCell(1).setCellValue("姓名");
-        headerRow.createCell(2).setCellValue("基本工资");
-        headerRow.createCell(3).setCellValue("请假天数");
-        headerRow.createCell(4).setCellValue("请假小时数");
-        headerRow.createCell(5).setCellValue("请假分钟数");
-        headerRow.createCell(6).setCellValue("有效工作日系数");
-        headerRow.createCell(7).setCellValue("工资");
-        headerRow.createCell(8).setCellValue("高温补贴");
-        /*headerRow.createCell(9).setCellValue("餐补");
-        headerRow.createCell(10).setCellValue("餐补X");
-        headerRow.createCell(11).setCellValue("餐补A");
-        headerRow.createCell(12).setCellValue("全勤奖");
-        headerRow.createCell(13).setCellValue("总工资");
-        headerRow.createCell(14).setCellValue("总工资X");
-        headerRow.createCell(15).setCellValue("总工资A");*/
-        headerRow.createCell(9).setCellValue("餐补");
-        headerRow.createCell(10).setCellValue("全勤奖");
-        headerRow.createCell(11).setCellValue("总工资");
+        headerRow.createCell(2).setCellValue("总工资");
+        headerRow.createCell(3).setCellValue("基本工资");
+        headerRow.createCell(4).setCellValue("请假天数");
+        headerRow.createCell(5).setCellValue("请假小时数");
+        headerRow.createCell(6).setCellValue("请假分钟数");
+        headerRow.createCell(7).setCellValue("有效工作日系数");
+        headerRow.createCell(8).setCellValue("工资");
+        headerRow.createCell(9).setCellValue("高温补贴");
+        headerRow.createCell(10).setCellValue("餐补");
+        headerRow.createCell(11).setCellValue("全勤奖");
+
 
         for (int i = 0; i < wages.size(); i++) {
+            WageDTO dto = wages.get(i);
+            String name = dto.getName();
             Row dataRow = sheet.createRow(i + 1);
             dataRow.createCell(0).setCellValue(month);
-            dataRow.createCell(1).setCellValue(wages.get(i).getName());
-            dataRow.createCell(2).setCellValue(wages.get(i).getBaseWage());
-            dataRow.createCell(3).setCellValue(wages.get(i).getCalDay());
-            dataRow.createCell(4).setCellValue(wages.get(i).getCalHour());
-            dataRow.createCell(5).setCellValue(wages.get(i).getCalMinute());
-            dataRow.createCell(6).setCellValue(wages.get(i).getEffWorkDay());
-            dataRow.createCell(7).setCellValue(wages.get(i).getCalWage());
-            dataRow.createCell(8).setCellValue(wages.get(i).getCalHighTempFee());
-            /*dataRow.createCell(9).setCellValue(wages.get(i).getCalLunchFee());
-            dataRow.createCell(10).setCellValue(wages.get(i).getCalLunchFeeByX());
-            dataRow.createCell(11).setCellValue(wages.get(i).getCalLunchFeeByA());
-            dataRow.createCell(12).setCellValue(wages.get(i).getFullAward());
-            dataRow.createCell(13).setCellValue(wages.get(i).getTotalWage());
-            dataRow.createCell(14).setCellValue(wages.get(i).getTotalWageByX());
-            dataRow.createCell(15).setCellValue(wages.get(i).getTotalWageByA());*/
-            dataRow.createCell(9).setCellValue(wages.get(i).getCalLunchFeeByA());
-            dataRow.createCell(10).setCellValue(wages.get(i).getFullAward());
-            dataRow.createCell(11).setCellValue(wages.get(i).getTotalWageByA());
+            dataRow.createCell(1).setCellValue(name);
+            dataRow.createCell(2).setCellValue(dto.getTotalWageByA());
+            dataRow.createCell(3).setCellValue(dto.getBaseWage());
+            dataRow.createCell(4).setCellValue(dto.getCalDay());
+            dataRow.createCell(5).setCellValue(dto.getCalHour());
+            dataRow.createCell(6).setCellValue(dto.getCalMinute());
+            dataRow.createCell(7).setCellValue(dto.getEffWorkDay());
+            dataRow.createCell(8).setCellValue(dto.getCalWage());
+            dataRow.createCell(9).setCellValue(dto.getCalHighTempFee());
+            dataRow.createCell(10).setCellValue(dto.getCalLunchFeeByA());
+            dataRow.createCell(11).setCellValue(dto.getFullAward());
+
+            //创建个人工资明细标签页
+            Sheet personalSheet = workbook.createSheet(name);
+            createPersonalSheet(personalSheet, month, dto, rightAlignStyle, colorStyle, borderStyle);
         }
 
         // 将工作簿写入文件或输出流
@@ -111,6 +132,116 @@ public class WageService {
         fileOut.close();
 
         workbook.close();
+    }
+
+    /**
+     * 创建个人工资明细标签页
+     *
+     * @param sheet           标签页
+     * @param month           日期
+     * @param wage            工资明细
+     * @param rightAlignStyle 居右样式
+     * @param colorStyle      颜色样式
+     * @param borderStyle     边框样式
+     */
+    private void createPersonalSheet(Sheet sheet, String month, WageDTO wage,
+                                     CellStyle rightAlignStyle, CellStyle colorStyle, CellStyle borderStyle) {
+        //第1列宽度为15个字符
+        sheet.setColumnWidth(0, 15 * 256);
+        //设置为325%缩放
+        sheet.setZoom(325);
+        //日期
+        Row monthRow = sheet.createRow(0);
+        monthRow.createCell(0).setCellValue("日期");
+        Cell monthCell = monthRow.createCell(1);
+        monthCell.setCellValue(month);
+        monthCell.setCellStyle(rightAlignStyle);
+        //姓名
+        Row nameRow = sheet.createRow(1);
+        nameRow.createCell(0).setCellValue("姓名");
+        Cell nameCell = nameRow.createCell(1);
+        nameCell.setCellValue(wage.getName());
+        nameCell.setCellStyle(rightAlignStyle);
+        //基本工资
+        Row baseWageRow = sheet.createRow(2);
+        Cell baseWageCell1 = baseWageRow.createCell(0);
+        baseWageCell1.setCellValue("基本工资");
+        baseWageCell1.setCellStyle(borderStyle);
+        Cell baseWageCell2 = baseWageRow.createCell(1);
+        baseWageCell2.setCellValue(wage.getBaseWage());
+        baseWageCell2.setCellStyle(borderStyle);
+        //请假天数
+        Row calDayRow = sheet.createRow(3);
+        Cell calDayCell1 = calDayRow.createCell(0);
+        calDayCell1.setCellValue("请假天数");
+        calDayCell1.setCellStyle(colorStyle);
+        Cell calDayCell2 = calDayRow.createCell(1);
+        calDayCell2.setCellValue(wage.getCalDay());
+        calDayCell2.setCellStyle(colorStyle);
+        //请假小时数
+        Row calHourRow = sheet.createRow(4);
+        Cell calHourCell1 = calHourRow.createCell(0);
+        calHourCell1.setCellValue("请假小时数");
+        calHourCell1.setCellStyle(colorStyle);
+        Cell calHourCell2 = calHourRow.createCell(1);
+        calHourCell2.setCellValue(wage.getCalHour());
+        calHourCell2.setCellStyle(colorStyle);
+        //请假分钟数
+        Row calMinuteRow = sheet.createRow(5);
+        Cell calMinuteCell1 = calMinuteRow.createCell(0);
+        calMinuteCell1.setCellValue("请假分钟数");
+        calMinuteCell1.setCellStyle(colorStyle);
+        Cell calMinuteCell2 = calMinuteRow.createCell(1);
+        calMinuteCell2.setCellValue(wage.getCalMinute());
+        calMinuteCell2.setCellStyle(colorStyle);
+        //有效工作日系数
+        Row effWorkDayRow = sheet.createRow(6);
+        Cell effWorkDayCell1 = effWorkDayRow.createCell(0);
+        effWorkDayCell1.setCellValue("有效工作日系数");
+        effWorkDayCell1.setCellStyle(borderStyle);
+        Cell effWorkDayCell2 = effWorkDayRow.createCell(1);
+        effWorkDayCell2.setCellValue(wage.getEffWorkDay());
+        effWorkDayCell2.setCellStyle(borderStyle);
+        //工资
+        Row calWageRow = sheet.createRow(7);
+        Cell calWageCell1 = calWageRow.createCell(0);
+        calWageCell1.setCellValue("工资");
+        calWageCell1.setCellStyle(borderStyle);
+        Cell calWageCell2 = calWageRow.createCell(1);
+        calWageCell2.setCellValue(wage.getCalWage());
+        calWageCell2.setCellStyle(borderStyle);
+        //高温补贴
+        Row calHighTempFeeRow = sheet.createRow(8);
+        Cell calHighTempFeeCell1 = calHighTempFeeRow.createCell(0);
+        calHighTempFeeCell1.setCellValue("高温补贴");
+        calHighTempFeeCell1.setCellStyle(borderStyle);
+        Cell calHighTempFeeCell2 = calHighTempFeeRow.createCell(1);
+        calHighTempFeeCell2.setCellValue(wage.getCalHighTempFee());
+        calHighTempFeeCell2.setCellStyle(borderStyle);
+        //餐补
+        Row calLunchFeeRow = sheet.createRow(9);
+        Cell calLunchFeeCell1 = calLunchFeeRow.createCell(0);
+        calLunchFeeCell1.setCellValue("餐补");
+        calLunchFeeCell1.setCellStyle(borderStyle);
+        Cell calLunchFeeCell2 = calLunchFeeRow.createCell(1);
+        calLunchFeeCell2.setCellValue(wage.getCalLunchFeeByA());
+        calLunchFeeCell2.setCellStyle(borderStyle);
+        //全勤奖
+        Row fullAwardRow = sheet.createRow(10);
+        Cell fullAwardCell1 = fullAwardRow.createCell(0);
+        fullAwardCell1.setCellValue("全勤奖");
+        fullAwardCell1.setCellStyle(borderStyle);
+        Cell fullAwardCell2 = fullAwardRow.createCell(1);
+        fullAwardCell2.setCellValue(wage.getFullAward());
+        fullAwardCell2.setCellStyle(borderStyle);
+        //总工资
+        Row totalWageRow = sheet.createRow(11);
+        Cell totalWageCell1 = totalWageRow.createCell(0);
+        totalWageCell1.setCellValue("总工资");
+        totalWageCell1.setCellStyle(borderStyle);
+        Cell totalWageCell2 = totalWageRow.createCell(1);
+        totalWageCell2.setCellValue(wage.getTotalWageByA());
+        totalWageCell2.setCellStyle(borderStyle);
     }
 
     private List<WageDTO> buildWages(Date date) {
