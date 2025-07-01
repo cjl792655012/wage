@@ -288,6 +288,9 @@ public class WageService {
                 calHighTempFee = new BigDecimal(calHighTempFeeDouble);
             }
             Integer calWageInt = calWage.setScale(0, RoundingMode.HALF_UP).intValue();
+            if (calWageInt < 0) {
+                calWageInt = 0;
+            }
             Integer calHighTempFeeInt = calHighTempFee.setScale(0, RoundingMode.HALF_UP).intValue();
 
             Integer fullAward = 0;
