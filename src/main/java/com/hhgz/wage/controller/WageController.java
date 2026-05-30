@@ -21,7 +21,7 @@ import java.nio.file.Paths;
 import java.util.List;
 
 /**
- * @description:
+ * @description: 工资接口
  * @author: JinLong Cai
  * @date: 2024/7/6 14:31
  */
