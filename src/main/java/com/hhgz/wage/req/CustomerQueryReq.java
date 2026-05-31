@@ -8,7 +8,7 @@ import lombok.Data;
  * @date: 2026/5/29 23:17
  */
 @Data
-public class CustomerQueryRequest {
+public class CustomerQueryReq {
 
     /**
      * 固定值：clientList

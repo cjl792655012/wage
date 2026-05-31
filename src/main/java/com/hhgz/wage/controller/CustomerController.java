@@ -6,6 +6,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+
 /**
  * @description: 客户接口
  * @author: JinLong Cai
@@ -19,8 +21,8 @@ public class CustomerController {
     private final CustomerService customerService;
 
     @GetMapping("/downloadExcel")
-    public String downloadExcel() {
-        return customerService.createCustomerDebtExcel();
+    public void downloadExcel() throws IOException {
+        customerService.createCustomerDebtExcel();
     }
 
 }

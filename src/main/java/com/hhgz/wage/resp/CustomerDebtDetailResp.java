@@ -6,12 +6,12 @@ import lombok.Data;
 import java.util.List;
 
 /**
- * @description: 客户欠款列表响应实体
+ * @description:
  * @author: JinLong Cai
- * @date: 2026/5/29 23:04
+ * @date: 2026/5/30 22:33
  */
 @Data
-public class CustomerDebtResponse {
+public class CustomerDebtDetailResp {
 
     /**
      * 错误码 0成功
@@ -20,10 +20,10 @@ public class CustomerDebtResponse {
     private Integer err;
 
     /**
-     * 客户列表
+     * 客户欠款详情列表
      */
     @JsonProperty("list")
-    private List<CustomerItem> list;
+    private List<CustomerDetail> list;
 
     /**
      * 列表总数
@@ -38,32 +38,9 @@ public class CustomerDebtResponse {
     private Integer isLast;
 
     /**
-     * 采购数量
-     */
-    @JsonProperty("purchase_num")
-    private String purchaseNum;
-
-    /**
-     * 高级会员数量
-     */
-    @JsonProperty("premium_num")
-    private String premiumNum;
-
-    /**
-     * 认证确认数量
-     */
-    @JsonProperty("auth_confirm_num")
-    private Integer authConfirmNum;
-
-    /**
      * 提示信息
      */
     @JsonProperty("msg")
     private String msg;
 
-    /**
-     * 调试信息
-     */
-    @JsonProperty("debug_msg")
-    private String debugMsg;
 }
