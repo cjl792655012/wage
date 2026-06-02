@@ -9,7 +9,7 @@ import lombok.Data;
  * @date: 2026/5/30 22:37
  */
 @Data
-public class CustomerDetail {
+public class CustomerOrder {
 
     @JsonProperty("id")
     private String id;

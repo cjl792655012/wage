@@ -1,11 +1,11 @@
 package com.hhgz.wage.service;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.hhgz.wage.dto.CustomerDebtDTO;
 import com.hhgz.wage.req.CustomerDebtDetailReq;
+import com.hhgz.wage.req.CustomerDebtOrderReq;
 import com.hhgz.wage.req.CustomerQueryReq;
-import com.hhgz.wage.resp.CustomerDebtDetailResp;
-import com.hhgz.wage.resp.CustomerDebtResp;
-import com.hhgz.wage.resp.CustomerItem;
+import com.hhgz.wage.resp.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.Row;
@@ -19,8 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
+import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,23 +40,26 @@ public class CustomerService {
 
     private static final String BASE_ORDER_URL = "https://api.duoke.net/index.php/order/search_by_id";
 
+    private static final String BASE_ORDER_DETAIL_URL = "https://api.duoke.net/index.php/order/get_unpaiddoc_by_client_id";
+
 
     public void createCustomerDebtExcel() throws IOException {
 
         List<CustomerDebtDTO> customerDebtList = new ArrayList<>();
 
         Integer isLast = 0;
-        Integer num = 0;
+        Integer cycleNum = 0;
+        Integer customerNum = 0;
         outer:
         while (isLast == 0) {
 
-            num = num + 1;
+            cycleNum = cycleNum + 1;
 
             // 1. 构建请求参数（完全按照你的URL）
-            CustomerQueryReq request = createCustomerQueryRequest(num, 50);
+            CustomerQueryReq request = createCustomerQueryRequest(cycleNum, 50);
 
-            // 2. 拼接 GET 请求URL（自动编码）
-            String url = UriComponentsBuilder.fromHttpUrl(BASE_QUERY_URL)
+            // 2. 拼接 GET 请求URL（统一编码一次，传 URI 避免 RestTemplate 二次编码）
+            URI uri = UriComponentsBuilder.fromHttpUrl(BASE_QUERY_URL)
                     .queryParam("bi_key", request.getBi_key())
                     .queryParam("days", request.getDays())
                     .queryParam("order", request.getOrder())
@@ -71,12 +73,12 @@ public class CustomerService {
                     .queryParam("key", request.getKey())
                     .build()
                     .encode()
-                    .toUriString();
+                    .toUri();
 
             // 3. 发送请求并解析为你的Response实体
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<CustomerDebtResp> response = restTemplate.getForEntity(
-                    url,
+                    uri,
                     CustomerDebtResp.class
             );
 
@@ -91,31 +93,35 @@ public class CustomerService {
                 if ("总欠款：".equals(customerItem.getName())) {
                     continue;
                 }
+                customerNum = customerNum + 1;
+                System.out.println("========== 序号：" + customerNum + " | id：" + customerItem.getAddId()
+                        + " | 客户：" + customerItem.getName() + " ==========");
                 //查询顾客详情列表
-
-                //第一次
-                CustomerDebtDetailReq customerDebtDetailReq = createCustomerDebtDetailReq(customerItem.getName(), 1, 20);
+                CustomerDebtDetailReq customerDebtDetailReq = createCustomerDebtDetailReq(customerItem.getAddId());
                 CustomerDebtDetailResp customerDebtDetailResp = sendCustomerDebtDetailReq(customerDebtDetailReq);
-                //第二次
-                CustomerDebtDetailReq customerDebtDetailReq2 = createCustomerDebtDetailReq(customerItem.getName(),
-                        Integer.valueOf(customerDebtDetailResp.getListNum()), Integer.valueOf(customerDebtDetailResp.getListNum()));
-                CustomerDebtDetailResp customerDebtDetailResp2 = sendCustomerDebtDetailReq(customerDebtDetailReq2);
+                List<CustomerDebtDetail> customerDebtDetails = customerDebtDetailResp.getRet();
+                String formatTime;
+                if (CollectionUtil.isNotEmpty(customerDebtDetails)) {
+                    String createTimeStr = customerDebtDetails.get(customerDebtDetails.size() - 1).getCtime();
+                    Long createTime = Long.valueOf(createTimeStr);
+                    Date createDate = new Date(createTime * 1000);
+                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                    formatTime = sdf.format(createDate);
+                } else {
+                    formatTime = "";
+                }
                 //封装
                 CustomerDebtDTO debtDTO = new CustomerDebtDTO();
                 debtDTO.setAddId(customerItem.getAddId());
                 debtDTO.setCustomerName(customerItem.getName());
                 debtDTO.setDebt(customerItem.getDebt());
-                String createTimeStr = customerDebtDetailResp2.getList().get(0).getCreateTime();
-                Long createTime = Long.valueOf(createTimeStr);
-                Date createDate = new Date(createTime * 1000);
-                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
-                String formatTime = sdf.format(createDate);
                 debtDTO.setDebtStartDate(formatTime);
                 customerDebtList.add(debtDTO);
             }
         }
 
-        Workbook workbook = new XSSFWorkbook(); // 使用XSSFWorkbook创建一个.xlsx格式的工作簿
+        //使用XSSFWorkbook创建一个.xlsx格式的工作簿
+        Workbook workbook = new XSSFWorkbook();
         Sheet sheet = workbook.createSheet();
         Row headerRow = sheet.createRow(0);
         headerRow.createCell(0).setCellValue("姓名");
@@ -130,7 +136,7 @@ public class CustomerService {
         }
 
         // 将工作簿写入文件或输出流
-        FileOutputStream fileOut = new FileOutputStream("wage.xlsx");
+        FileOutputStream fileOut = new FileOutputStream("debt.xlsx");
         workbook.write(fileOut);
         fileOut.close();
 
@@ -159,8 +165,35 @@ public class CustomerService {
         return request;
     }
 
-    private CustomerDebtDetailReq createCustomerDebtDetailReq(String customerName, Integer page, Integer pageNum) {
+    private CustomerDebtDetailReq createCustomerDebtDetailReq(String customerId) {
         CustomerDebtDetailReq request = new CustomerDebtDetailReq();
+        request.setClient_id(customerId);
+        return request;
+    }
+
+    private CustomerDebtDetailResp sendCustomerDebtDetailReq(CustomerDebtDetailReq customerDebtDetailReq) {
+        // 由 UriComponentsBuilder 统一编码一次；中文与 JSON 参数直接传原始值，不再手动 URLEncoder
+        URI uri = UriComponentsBuilder.fromHttpUrl(BASE_ORDER_DETAIL_URL)
+                .queryParam("app_pid", customerDebtDetailReq.getApp_pid())
+                .queryParam("client_id", customerDebtDetailReq.getClient_id())
+                .queryParam("key", customerDebtDetailReq.getKey())
+                .queryParam("lang", customerDebtDetailReq.getLang())
+                .queryParam("order_type", customerDebtDetailReq.getOrder_type())
+                .build()
+                .encode()
+                .toUri();
+
+        // 传 URI（而非 String）给 RestTemplate，避免 DefaultUriBuilderFactory 二次编码
+        RestTemplate restTemplate = new RestTemplate();
+        ResponseEntity<CustomerDebtDetailResp> response = restTemplate.getForEntity(
+                uri,
+                CustomerDebtDetailResp.class
+        );
+        return response.getBody();
+    }
+
+    private CustomerDebtOrderReq createCustomerDebtOrderReq(String customerName, Integer page, Integer pageNum) {
+        CustomerDebtOrderReq request = new CustomerDebtOrderReq();
         request.setBi_key("documentList");
         request.setKeyword(customerName);
         request.setPage(String.valueOf(page));
@@ -176,33 +209,29 @@ public class CustomerService {
         return request;
     }
 
-    private CustomerDebtDetailResp sendCustomerDebtDetailReq(CustomerDebtDetailReq customerDebtDetailReq) throws UnsupportedEncodingException {
-        //中文编码
-        String keyword = URLEncoder.encode(customerDebtDetailReq.getKeyword(), "UTF-8");
-        String orderType = URLEncoder.encode(customerDebtDetailReq.getOrder_type(), "UTF-8");
-        String payStatus = URLEncoder.encode(customerDebtDetailReq.getPay_status(), "UTF-8");
-
-        // 2. 自动拼接GET请求（自动编码，不会乱码）
-        String url = UriComponentsBuilder.fromHttpUrl(BASE_ORDER_URL)
-                .queryParam("bi_key", customerDebtDetailReq.getBi_key())
-                .queryParam("keyword", keyword)
-                .queryParam("page", customerDebtDetailReq.getPage())
-                .queryParam("page_num", customerDebtDetailReq.getPage_num())
-                .queryParam("type", customerDebtDetailReq.getType())
-                .queryParam("sday", customerDebtDetailReq.getSday())
-                .queryParam("eday", customerDebtDetailReq.getEday())
-                .queryParam("order_type", orderType)
-                .queryParam("pay_status", payStatus)
-                .queryParam("lang", customerDebtDetailReq.getLang())
-                .queryParam("key", customerDebtDetailReq.getKey())
+    private CustomerDebtOrderResp sendCustomerDebtOrderReq(CustomerDebtOrderReq customerDebtOrderReq) {
+        // 由 UriComponentsBuilder 统一编码一次；中文与 JSON 参数直接传原始值，不再手动 URLEncoder
+        URI uri = UriComponentsBuilder.fromHttpUrl(BASE_ORDER_URL)
+                .queryParam("bi_key", customerDebtOrderReq.getBi_key())
+                .queryParam("keyword", customerDebtOrderReq.getKeyword())
+                .queryParam("page", customerDebtOrderReq.getPage())
+                .queryParam("page_num", customerDebtOrderReq.getPage_num())
+                .queryParam("type", customerDebtOrderReq.getType())
+                .queryParam("sday", customerDebtOrderReq.getSday())
+                .queryParam("eday", customerDebtOrderReq.getEday())
+                .queryParam("order_type", customerDebtOrderReq.getOrder_type())
+                .queryParam("pay_status", customerDebtOrderReq.getPay_status())
+                .queryParam("lang", customerDebtOrderReq.getLang())
+                .queryParam("key", customerDebtOrderReq.getKey())
                 .build()
-                .toUriString();
+                .encode()
+                .toUri();
 
-        // 3. 发送请求，自动解析为你的Response实体
+        // 传 URI（而非 String）给 RestTemplate，避免 DefaultUriBuilderFactory 二次编码
         RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<CustomerDebtDetailResp> response = restTemplate.getForEntity(
-                url,
-                CustomerDebtDetailResp.class
+        ResponseEntity<CustomerDebtOrderResp> response = restTemplate.getForEntity(
+                uri,
+                CustomerDebtOrderResp.class
         );
         return response.getBody();
     }
