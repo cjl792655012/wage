@@ -16,5 +16,6 @@ public class CustomerDebtDetail {
     private String is_before;
     private String ctime;
     private String total_price;
+    private String paid_price;
 
 }

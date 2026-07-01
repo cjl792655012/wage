@@ -14,6 +14,8 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @description: 客户接口
@@ -34,9 +36,13 @@ public class CustomerController {
         String filePath = "debt.xlsx";
         Path path = Paths.get(filePath);
         FileSystemResource resource = new FileSystemResource(path);
+        Date date = new Date();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyyMM");
+        String formatTime = sdf.format(date);
+        String headerValue = "attachment; filename=debt-" + formatTime + ".xlsx";
         // 设置响应头
         HttpHeaders headers = new HttpHeaders();
-        headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=debt.xlsx");
+        headers.add(HttpHeaders.CONTENT_DISPOSITION, headerValue);
 
         return ResponseEntity.ok()
                 .headers(headers)

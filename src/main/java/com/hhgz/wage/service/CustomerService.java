@@ -77,7 +77,7 @@ public class CustomerService {
             isLast = customerDebtResp.getIsLast();
             List<CustomerItem> customerItemList = customerDebtResp.getList();
             for (CustomerItem customerItem : customerItemList) {
-                if (Double.valueOf(customerItem.getDebt()) <= 0.0) {
+                if (Double.valueOf(customerItem.getDebt()) <= 30.0) {
                     break outer;
                 }
                 if ("总欠款：".equals(customerItem.getName())) {
@@ -90,12 +90,15 @@ public class CustomerService {
                 CustomerDebtDetailResp customerDebtDetailResp = sendCustomerDebtDetailReq(customerDebtDetailReq);
                 List<CustomerDebtDetail> customerDebtDetails = customerDebtDetailResp.getRet();
                 String formatTime;
+                Double firstDebtNum = 0.0;
                 if (CollectionUtil.isNotEmpty(customerDebtDetails)) {
-                    String createTimeStr = customerDebtDetails.get(customerDebtDetails.size() - 1).getCtime();
+                    CustomerDebtDetail customerDebtDetail = customerDebtDetails.get(customerDebtDetails.size() - 1);
+                    String createTimeStr = customerDebtDetail.getCtime();
                     Long createTime = Long.valueOf(createTimeStr);
                     Date createDate = new Date(createTime * 1000);
                     SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
                     formatTime = sdf.format(createDate);
+                    firstDebtNum = Double.parseDouble(customerDebtDetail.getTotal_price()) - Double.parseDouble(customerDebtDetail.getPaid_price());
                 } else {
                     formatTime = "";
                 }
@@ -105,13 +108,16 @@ public class CustomerService {
                 debtDTO.setCustomerName(customerItem.getName());
                 debtDTO.setDebt(customerItem.getDebt());
                 debtDTO.setDebtStartDate(formatTime);
+                debtDTO.setFirstDebtNum(firstDebtNum);
                 customerDebtList.add(debtDTO);
             }
         }
 
         //使用XSSFWorkbook创建一个.xlsx格式的工作簿
         Workbook workbook = new XSSFWorkbook();
-
+        //获取退货抵扣列表
+        getRefundDeductionList(customerDebtList);
+        //排序
         Map<String, List<CustomerDebtDTO>> result = groupAndSortAll(customerDebtList);
         for (Map.Entry<String, List<CustomerDebtDTO>> entry : result.entrySet()) {
             Sheet sheet = workbook.createSheet(entry.getKey());
@@ -141,6 +147,16 @@ public class CustomerService {
         fileOut.close();
 
         workbook.close();
+    }
+
+    private void getRefundDeductionList(List<CustomerDebtDTO> customerDebtList) {
+        System.out.println("========================= getRefundDeductionList =========================");
+        for (CustomerDebtDTO dto : customerDebtList) {
+            if (dto.getFirstDebtNum() < 0.0) {
+                System.out.println("id: " + dto.getAddId() + ", 姓名: " + dto.getCustomerName() + ", 日期: " + dto.getDebtStartDate());
+            }
+        }
+        System.out.println("======================= getRefundDeductionList ===========================");
     }
 
     /**

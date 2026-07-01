@@ -30,4 +30,9 @@ public class CustomerDebtDTO {
      */
     private String debtStartDate;
 
+    /**
+     * 第一笔欠款
+     */
+    private Double firstDebtNum;
+
 }
