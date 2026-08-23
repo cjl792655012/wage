@@ -19,6 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
@@ -185,30 +186,57 @@ public class CustomerService {
             }
         }
 
-        // ===================== 2. 有效日期：按年份分组 + 排序 =====================
+        // ===================== 2. 有效日期：按年份分组 + 组内排序 =====================
         if (!validDateList.isEmpty()) {
-            // 按年份分组（使用Integer保证排序正确）
-            Map<Integer, List<CustomerDebtDTO>> yearGroupMap = validDateList.stream().collect(Collectors.groupingBy(dto -> {
-                LocalDate date = LocalDate.parse(dto.getDebtStartDate(), DATE_FORMATTER);
-                return date.getYear();
+            // 按年份分组 key=年份数字
+            Map<Integer, List<CustomerDebtDTO>> yearGroupMap = validDateList.stream()
+                    .collect(Collectors.groupingBy(dto -> {
+                        LocalDate date = LocalDate.parse(dto.getDebtStartDate(), DATE_FORMATTER);
+                        return date.getYear();
+                    }));
+
+            // 【重点修改】组内排序：1.日期升序；2.同日期，debt欠款金额降序
+            yearGroupMap.values().forEach(list -> list.sort((o1, o2) -> {
+                // 先比较欠款开始日期，升序
+                LocalDate d1 = LocalDate.parse(o1.getDebtStartDate(), DATE_FORMATTER);
+                LocalDate d2 = LocalDate.parse(o2.getDebtStartDate(), DATE_FORMATTER);
+                int dateCompare = d1.compareTo(d2);
+                if (dateCompare != 0) {
+                    return dateCompare;
+                }
+                // 日期相同：debt金额降序，debt是String转BigDecimal，空当做0处理
+                BigDecimal debt1 = parseDebt(o1.getDebt());
+                BigDecimal debt2 = parseDebt(o2.getDebt());
+                return debt2.compareTo(debt1);
             }));
 
-            // 每个年份内部 → 按月份升序
-            yearGroupMap.values().forEach(list -> list.sort(Comparator.comparing(dto -> {
-                LocalDate date = LocalDate.parse(dto.getDebtStartDate(), DATE_FORMATTER);
-                return date.getMonthValue();
-            })));
-
-            // 年份升序排列，并放入结果
-            yearGroupMap.entrySet().stream().sorted(Map.Entry.comparingByKey()).forEach(entry -> resultMap.put(String.valueOf(entry.getKey()), entry.getValue()));
+            // 年份key升序，放入LinkedHashMap，保证输出顺序
+            yearGroupMap.entrySet().stream()
+                    .sorted(Map.Entry.comparingByKey())
+                    .forEach(entry -> resultMap.put(String.valueOf(entry.getKey()), entry.getValue()));
         }
 
-        // 空日期放入结果
+        // 空日期的数据放进去
         if (!emptyDateList.isEmpty()) {
             resultMap.put(EMPTY_DATE_KEY, emptyDateList);
         }
 
         return resultMap;
+    }
+
+    /**
+     * 把字符串debt转为BigDecimal，null/空字符串当做0
+     */
+    private static BigDecimal parseDebt(String debtStr) {
+        if (debtStr == null || debtStr.trim().isEmpty()) {
+            return BigDecimal.ZERO;
+        }
+        try {
+            return new BigDecimal(debtStr.trim());
+        } catch (NumberFormatException e) {
+            // 格式非法，当做0
+            return BigDecimal.ZERO;
+        }
     }
 
     /**
