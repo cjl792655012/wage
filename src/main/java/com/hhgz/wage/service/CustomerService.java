@@ -8,9 +8,7 @@ import com.hhgz.wage.req.CustomerQueryReq;
 import com.hhgz.wage.resp.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -120,24 +118,48 @@ public class CustomerService {
         getRefundDeductionList(customerDebtList);
         //排序
         Map<String, List<CustomerDebtDTO>> result = groupAndSortAll(customerDebtList);
+        //创建字体对象
+        Font font = workbook.createFont();
+        //设置字体型号
+        font.setFontName("宋体");
+        //设置字体大小16号
+        font.setFontHeightInPoints((short) 16);
+        //设置加粗
+        font.setBold(true);
+
+        CellStyle cellStyle = workbook.createCellStyle();
+        cellStyle.setFont(font);
+        cellStyle.setBorderBottom(BorderStyle.THIN);
         for (Map.Entry<String, List<CustomerDebtDTO>> entry : result.entrySet()) {
             Sheet sheet = workbook.createSheet(entry.getKey());
             //设置为204%缩放
             sheet.setZoom(190);
             //设置列宽度为12个字符
-            sheet.setColumnWidth(0, 33 * 256);
+            sheet.setColumnWidth(0, 36 * 256);
             sheet.setColumnWidth(1, 15 * 256);
-            sheet.setColumnWidth(2, 15 * 256);
+            sheet.setColumnWidth(2, 18 * 256);
             Row headerRow = sheet.createRow(0);
-            headerRow.createCell(0).setCellValue("姓名");
-            headerRow.createCell(1).setCellValue("欠款");
-            headerRow.createCell(2).setCellValue("欠款开始日期");
+            Cell headerCell0 = headerRow.createCell(0);
+            headerCell0.setCellValue("姓名");
+            headerCell0.setCellStyle(cellStyle);
+            Cell headerCell1 = headerRow.createCell(1);
+            headerCell1.setCellValue("欠款");
+            headerCell1.setCellStyle(cellStyle);
+            Cell headerCell2 = headerRow.createCell(2);
+            headerCell2.setCellValue("欠款开始日期");
+            headerCell2.setCellStyle(cellStyle);
 
             for (int i = 0; i < entry.getValue().size(); i++) {
                 Row dataRow = sheet.createRow(i + 1);
-                dataRow.createCell(0).setCellValue(entry.getValue().get(i).getCustomerName());
-                dataRow.createCell(1).setCellValue(entry.getValue().get(i).getDebt());
-                dataRow.createCell(2).setCellValue(entry.getValue().get(i).getDebtStartDate());
+                Cell cell0 = dataRow.createCell(0);
+                cell0.setCellValue(entry.getValue().get(i).getCustomerName());
+                cell0.setCellStyle(cellStyle);
+                Cell cell1 = dataRow.createCell(1);
+                cell1.setCellValue(entry.getValue().get(i).getDebt());
+                cell1.setCellStyle(cellStyle);
+                Cell cell2 = dataRow.createCell(2);
+                cell2.setCellValue(entry.getValue().get(i).getDebtStartDate());
+                cell2.setCellStyle(cellStyle);
             }
         }
 
